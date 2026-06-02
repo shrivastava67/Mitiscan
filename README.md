@@ -70,9 +70,15 @@ is not `COMPLETED` with findings — no blank headers in the final document.
 
 ## Run
 
+One command — clones, auto-installs Python dependencies on first launch, opens the GUI:
+
 ```bash
-pip install -r requirements.txt        # may need --break-system-packages on Kali 2023+
-python mitiscan.py                     # launch GUI
+git clone https://github.com/shrivastava67/Mitiscan.git && cd Mitiscan && python mitiscan.py
+```
+
+Other modes:
+
+```bash
 python mitiscan.py --check-deps        # audit dependencies (no install)
 python mitiscan.py --bootstrap         # install missing tools (apt → pip → go → git)
 python mitiscan.py --headless example.com --authorized --profile BALANCED

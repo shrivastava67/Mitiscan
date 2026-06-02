@@ -12,12 +12,35 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+_REQS = {"customtkinter": "customtkinter>=5.2.0",
+         "jinja2": "jinja2>=3.1.0",
+         "weasyprint": "weasyprint>=60.0"}
+
+
+def _ensure_pip_requirements() -> None:
+    missing = [spec for mod, spec in _REQS.items()
+               if importlib.util.find_spec(mod) is None]
+    if not missing:
+        return
+    print(f"[mitiscan] installing {len(missing)} python dependencies "
+          f"(first-run bootstrap)...", flush=True)
+    req_file = ROOT / "requirements.txt"
+    cmd = [sys.executable, "-m", "pip", "install"]
+    cmd += ["-r", str(req_file)] if req_file.is_file() else missing
+    try:
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        subprocess.check_call(cmd + ["--break-system-packages"])
 
 
 def _cli() -> argparse.ArgumentParser:
@@ -79,6 +102,7 @@ async def _do_headless(target: str, profile_name: str, resume: str | None) -> in
 
 def main() -> None:
     args = _cli().parse_args()
+    _ensure_pip_requirements()
 
     if args.check_deps:
         sys.exit(asyncio.run(_do_bootstrap(check_only=True)))
