@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+  id-token: write   # sigstore + PyPI trusted publishing
+  attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install build
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist/ }
+
+  sign-and-attest:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist/ }
+      - uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: ./dist/*.tar.gz ./dist/*.whl
+      - uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+      - uses: actions/upload-artifact@v4
+        with: { name: dist-signed, path: dist/ }
+
+  github-release:
+    needs: sign-and-attest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/download-artifact@v4
+        with: { name: dist-signed, path: dist/ }
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  pypi:
+    needs: sign-and-attest
+    runs-on: ubuntu-latest
+    environment: pypi   # configure trusted publishing in repo settings
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: dist-signed, path: dist/ }
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

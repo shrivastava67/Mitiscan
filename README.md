@@ -1,30 +1,53 @@
 # Mitiscan
 
-Enterprise-grade automated VAPT platform. 35 specialized modules, async orchestration,
-conditional NIST SP 800-115 / OWASP reporting.
+[![CI](https://github.com/shrivastava67/Mitiscan/actions/workflows/ci.yml/badge.svg)](https://github.com/shrivastava67/Mitiscan/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/shrivastava67/Mitiscan/actions/workflows/codeql.yml/badge.svg)](https://github.com/shrivastava67/Mitiscan/actions/workflows/codeql.yml)
+[![OSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/shrivastava67/Mitiscan/badge)](https://securityscorecards.dev/viewer/?uri=github.com/shrivastava67/Mitiscan)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](pyproject.toml)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Code of Conduct](https://img.shields.io/badge/contributor%20covenant-2.1-purple.svg)](CODE_OF_CONDUCT.md)
 
-## Architecture
+Enterprise-grade automated VAPT platform. 35 specialized modules, async
+orchestration, conditional NIST SP 800-115 / OWASP reporting.
 
-```
-mitiscan/
-├── mitiscan.py            # entrypoint (launches GUI)
-├── core/
-│   ├── engine.py          # async orchestration engine
-│   ├── scope.py           # target scope dataclass
-│   ├── evasion.py         # adaptive throttle / WAF awareness
-│   ├── result.py          # ModuleResult / State enums
-│   ├── bootstrap.py       # self-healing dependency installer
-│   └── reporter.py        # conditional HTML/MD report renderer
-├── modules/
-│   └── modules.py         # 35 module coroutines
-├── gui/
-│   └── app.py             # customtkinter frontend
-├── templates/
-│   └── report.html.j2     # Jinja2 NIST/OWASP report template
-└── mitiscan_outputs/      # per-run artifact directory
+> ⚠️ **For authorized security testing only.** See
+> [Disclaimer](#disclaimer) and [SECURITY.md](SECURITY.md).
+
+## One-Command Quickstart
+
+```bash
+git clone https://github.com/shrivastava67/Mitiscan.git && cd Mitiscan && python mitiscan.py
 ```
 
-## 35 Modules
+First run auto-installs Python dependencies, then launches the GUI.
+
+For containers:
+
+```bash
+docker run --rm ghcr.io/shrivastava67/mitiscan:latest --check-deps
+```
+
+## Highlights
+
+- **35 modules** — passive OSINT → active recon → web/API/CMS/DB/cloud/IoT
+  audit → consolidation with CVE/CWE/CVSS mapping.
+- **Async DAG engine** — parallel within stages, sequential between, with
+  per-module checkpointing and `--resume`.
+- **Profile-aware evasion** — STEALTH / BALANCED / AGGRESSIVE concurrency
+  and timing.
+- **Conditional reporting** — Jinja2 templates emit HTML / Markdown / JSON
+  (+ PDF via WeasyPrint). Empty sections are purged automatically.
+- **Authorization gate** — `--authorized` flag and a written receipt per run.
+- **Hardened by default** — RFC-1918 / loopback / multicast deny list,
+  shell-injection-safe subprocess spawn, secret-redacted structured logs.
+- **Supply-chain trust** — Sigstore-signed releases, CycloneDX SBOM, GitHub
+  attestations, weekly Dependabot + pip-audit + CodeQL.
+
+## Modules
+
+<details>
+<summary>Click for the 35-module list</summary>
 
 1. Bootstrap / dependency self-heal
 2. Passive OSINT (`amass`, `subfinder`, `theHarvester`)
@@ -62,52 +85,59 @@ mitiscan/
 34. Post-exploit sim (`linpeas` artifact parse)
 35. Consolidation / dedup / CVE-CWE-CVSS mapping
 
-## Conditional Reporting
+</details>
 
-Each module returns a `ModuleResult` carrying `state ∈ {PENDING, RUNNING,
-COMPLETED, SKIPPED, NOT_APPLICABLE, FAILED}`. Reporter purges any module that
-is not `COMPLETED` with findings — no blank headers in the final document.
+## Architecture
 
-## Run
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full diagram and
+package boundaries. TL;DR:
 
-One command — clones, auto-installs Python dependencies on first launch, opens the GUI:
-
-```bash
-git clone https://github.com/shrivastava67/Mitiscan.git && cd Mitiscan && python mitiscan.py
+```
+CLI / GUI → Engine (async DAG) → Modules → Reporter → mitiscan_outputs/<run_id>/
+                              ↘
+                                core.logging  →  mitiscan.jsonl
+                                core.logging  →  audit.jsonl
 ```
 
-Other modes:
+## Modes
 
 ```bash
-python mitiscan.py --check-deps        # audit dependencies (no install)
-python mitiscan.py --bootstrap         # install missing tools (apt → pip → go → git)
+python mitiscan.py                                          # GUI
+python mitiscan.py --check-deps                             # audit dependencies
+python mitiscan.py --bootstrap                              # install missing tools
 python mitiscan.py --headless example.com --authorized --profile BALANCED
-python mitiscan.py --resume <run_id>   # resume an interrupted scan
+python mitiscan.py --resume <run_id>                        # resume an interrupted scan
 ```
 
-Target intake supports domain, IPv4, or CIDR. GUI shows live module state +
-backend stdout. Final HTML + Markdown + JSON (+ PDF if `weasyprint` installed)
-land in `mitiscan_outputs/mitiscan_outputs_<runid>/`.
+Full reference: [docs/USAGE.md](docs/USAGE.md).
+Deploying to CI / Kubernetes / air-gap: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-## Implemented Enhancements
+## Security Posture
 
-1. `--check-deps` dry-run audit
-2. Per-tool version probe + minimum-version gate
-3. Idempotency cache at `~/.mitiscan/bootstrap.json` (24h TTL on `apt-get update`)
-4. PEP-668 handling — auto-venv when Python is externally-managed
-5. PATH augmentation — `$HOME/go/bin`, `~/.local/bin`, venv `bin/` injected per subprocess
-6. Wildcard DNS filter on `puredns` brute (M03)
-7. Global URL dedup set on engine (`engine.seen_urls`, `engine.see()`)
-8. CVSS vector field carried end-to-end through finding dicts
-9. Finding dedup by normalized title + target (no near-duplicates)
-10. Tech-stack-driven gating — M17 skipped on schema'd API hosts
-11. Per-module checkpoint + `--resume <run_id>` survival
-12. Parallel module DAG — modules within a stage run concurrently (sequential under STEALTH)
-13. `soft_timeout` for long runs (nmap, puredns, nuclei) — graceful SIGTERM before SIGKILL
-14. PDF export via `weasyprint`
-15. Authorization gate — GUI checkbox + CLI `--authorized` flag + `authorization.txt` receipt
+| Concern             | Control                                                    |
+|---------------------|------------------------------------------------------------|
+| Vulnerability intake| [SECURITY.md](SECURITY.md), private advisories             |
+| Static analysis     | CodeQL (security-extended + security-and-quality)          |
+| Dependency review   | Dependabot weekly + `pip-audit` in CI                      |
+| Secret scanning     | gitleaks in CI + pre-commit                                |
+| Build provenance    | Sigstore signature + GitHub attestation on every release   |
+| SBOM                | CycloneDX, attached to every release                       |
+| Scorecard           | OSSF Scorecard published weekly                            |
+| Container           | Multi-stage, non-root (uid 10001), runtime-only image      |
+| Branch protection   | Required reviews + green CI on `main`                      |
+
+Threat model: [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
+
+## Project Health
+
+- [Code of Conduct](CODE_OF_CONDUCT.md) (Contributor Covenant 2.1)
+- [Contributing Guide](CONTRIBUTING.md) (DCO sign-off required)
+- [Support](SUPPORT.md)
+- [Changelog](CHANGELOG.md)
+- [Citation](CITATION.cff)
 
 ## Disclaimer
 
 For authorized security testing only. Use only on systems you own or have
-explicit written permission to test.
+explicit written permission to test. The authors disclaim all liability
+for misuse. See [LICENSE](LICENSE).

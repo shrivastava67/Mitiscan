@@ -1,0 +1,22 @@
+* text=auto eol=lf
+
+*.py        text diff=python
+*.md        text
+*.yml       text
+*.yaml      text
+*.toml      text
+*.json      text
+*.html      text
+*.j2        text
+Dockerfile  text
+
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+
+# Linguist
+docs/*       linguist-documentation
+tests/*      linguist-detectable=true
+wordlists/*  linguist-vendored

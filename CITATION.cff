@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use Mitiscan in academic work, please cite it as below."
+title: "Mitiscan: automated VAPT platform"
+abstract: >
+  Mitiscan is an open-source automated vulnerability assessment and
+  penetration testing platform with 35 specialized modules, an async
+  orchestration engine, and conditional NIST SP 800-115 / OWASP report
+  generation.
+authors:
+  - family-names: "Mitiscan contributors"
+    name-particle: ""
+type: software
+license: MIT
+repository-code: "https://github.com/shrivastava67/Mitiscan"
+url: "https://github.com/shrivastava67/Mitiscan"
+keywords:
+  - security
+  - penetration-testing
+  - vulnerability-scanner
+  - nist-sp-800-115
+  - owasp
+version: "0.1.0"
+date-released: "2026-06-02"

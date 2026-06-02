@@ -1,0 +1,15 @@
+# Code owners — reviewers are auto-requested on PRs that touch these paths.
+# Format: <pattern> <owner> [<owner>...]
+
+# Default — all files
+*                       @shrivastava67
+
+# Security-sensitive code
+SECURITY.md             @shrivastava67
+.github/workflows/      @shrivastava67
+core/bootstrap.py       @shrivastava67
+core/engine.py          @shrivastava67
+
+# Release infra
+pyproject.toml          @shrivastava67
+CHANGELOG.md            @shrivastava67

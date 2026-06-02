@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday", time: "06:00", timezone: "UTC" }
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "python"]
+    commit-message: { prefix: "chore(deps)", include: "scope" }
+    groups:
+      runtime:
+        patterns: ["customtkinter", "jinja2", "weasyprint"]
+      dev:
+        patterns: ["pytest*", "ruff", "black", "mypy", "bandit", "pip-audit", "pre-commit", "cyclonedx*"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday" }
+    labels: ["dependencies", "github-actions"]
+    commit-message: { prefix: "chore(ci)", include: "scope" }
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday" }
+    labels: ["dependencies", "docker"]
+    commit-message: { prefix: "chore(docker)", include: "scope" }

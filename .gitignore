@@ -12,3 +12,18 @@ mitiscan_outputs/mitiscan_outputs_*/
 *.tmp
 wordlists/*.txt
 !wordlists/.gitkeep
+
+# Stray nested clone of self
+/Mitiscan/
+
+# Build / test caches
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+sbom.cdx.json

@@ -1,0 +1,13 @@
+title = "Mitiscan gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Globally ignored noise"
+paths = [
+  '''\.github/.*\.md''',
+  '''docs/.*\.md''',
+  '''CHANGELOG\.md''',
+  '''tests/fixtures/.*''',
+]

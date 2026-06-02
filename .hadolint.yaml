@@ -1,0 +1,5 @@
+failure-threshold: warning
+ignored: [DL3008, DL3009]   # pin apt versions / autoremove — slim images already minimize
+trustedRegistries:
+  - docker.io
+  - ghcr.io
