@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mitiscan Report — {{ target }}</title>
+<style>
+  :root { --bg:#0e1116; --fg:#e6edf3; --mut:#8b949e; --acc:#58a6ff;
+          --crit:#f85149; --high:#ff7b72; --med:#d29922; --low:#3fb950; --info:#8b949e; }
+  body { background:var(--bg); color:var(--fg); font-family:'JetBrains Mono',Consolas,monospace;
+         max-width:1100px; margin:2rem auto; padding:0 1.5rem; line-height:1.55; }
+  h1,h2,h3 { color:var(--acc); }
+  h1 { border-bottom:2px solid var(--acc); padding-bottom:0.4rem; }
+  h2 { margin-top:2.2rem; border-bottom:1px solid #30363d; padding-bottom:0.3rem; }
+  .meta { color:var(--mut); font-size:0.9rem; }
+  table { width:100%; border-collapse:collapse; margin:1rem 0; }
+  th,td { padding:0.5rem 0.7rem; border-bottom:1px solid #30363d; text-align:left; }
+  th { color:var(--acc); }
+  .sev { display:inline-block; padding:0.1rem 0.5rem; border-radius:3px; font-size:0.75rem; font-weight:bold; }
+  .sev.CRITICAL { background:var(--crit); color:#000; }
+  .sev.HIGH { background:var(--high); color:#000; }
+  .sev.MEDIUM { background:var(--med); color:#000; }
+  .sev.LOW { background:var(--low); color:#000; }
+  .sev.INFO { background:var(--info); color:#000; }
+  .state-COMPLETED { color:var(--low); }
+  .state-SKIPPED, .state-NOT_APPLICABLE { color:var(--mut); }
+  .state-FAILED { color:var(--crit); }
+  .finding { background:#161b22; border-left:3px solid var(--acc); padding:0.8rem 1rem;
+             margin:0.7rem 0; border-radius:4px; }
+  code { background:#161b22; padding:0.1rem 0.35rem; border-radius:3px; }
+  .summary-cards { display:flex; gap:1rem; flex-wrap:wrap; margin:1rem 0; }
+  .card { background:#161b22; padding:0.8rem 1.2rem; border-radius:6px; min-width:120px;
+          border-top:3px solid var(--acc); }
+  .card .n { font-size:1.8rem; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h1>Mitiscan VAPT Report</h1>
+<p class="meta">
+  Target: <code>{{ target }}</code> ·
+  Run ID: <code>{{ run_id }}</code> ·
+  Generated: {{ generated_at }} ·
+  Standard: {{ standard }}
+</p>
+
+<h2>Executive Summary</h2>
+<div class="summary-cards">
+  <div class="card" style="border-top-color:var(--crit)"><div>Critical</div><div class="n">{{ severity_counts.CRITICAL }}</div></div>
+  <div class="card" style="border-top-color:var(--high)"><div>High</div><div class="n">{{ severity_counts.HIGH }}</div></div>
+  <div class="card" style="border-top-color:var(--med)"><div>Medium</div><div class="n">{{ severity_counts.MEDIUM }}</div></div>
+  <div class="card" style="border-top-color:var(--low)"><div>Low</div><div class="n">{{ severity_counts.LOW }}</div></div>
+  <div class="card" style="border-top-color:var(--info)"><div>Info</div><div class="n">{{ severity_counts.INFO }}</div></div>
+</div>
+
+{% if cve_list %}
+<p><strong>CVEs:</strong> {{ cve_list|join(', ') }}</p>
+{% endif %}
+{% if cwe_list %}
+<p><strong>CWEs:</strong> {{ cwe_list|join(', ') }}</p>
+{% endif %}
+
+<h2>Module State Matrix</h2>
+<table>
+  <thead><tr><th>#</th><th>Module</th><th>State</th><th>Findings</th><th>Duration</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for m in state_matrix %}
+    <tr>
+      <td>M{{ '%02d' % m.id }}</td>
+      <td>{{ m.name }}</td>
+      <td class="state-{{ m.state }}">{{ m.state }}</td>
+      <td>{{ m.findings }}</td>
+      <td>{{ m.duration }}s</td>
+      <td>{{ m.reason }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{# ==================== CONDITIONAL SECTION RENDERING ==================== #}
+{# Only modules in rendered_modules (state==COMPLETED AND findings>0)     #}
+{# appear below. Blank/skipped/N-A modules are PURGED entirely.            #}
+
+{% for r in rendered_modules %}
+<h2>M{{ '%02d' % r.module_id }} — {{ r.name }}</h2>
+<p class="meta">State: {{ r.state.value }} · Duration: {{ r.duration_sec }}s ·
+   Findings: {{ r.findings|length }}</p>
+
+  {% for f in r.findings %}
+  <div class="finding">
+    <span class="sev {{ (f.severity or 'INFO')|upper }}">{{ (f.severity or 'INFO')|upper }}</span>
+    <strong>{{ f.title or '(no title)' }}</strong>
+    {% if f.target %}<div>Target: <code>{{ f.target }}</code></div>{% endif %}
+    {% if f.cve %}<div>CVE: <code>{{ f.cve }}</code></div>{% endif %}
+    {% if f.cwe %}<div>CWE: <code>{{ f.cwe }}</code></div>{% endif %}
+    {% if f.cvss %}<div>CVSS v3.1: <code>{{ f.cvss }}</code></div>{% endif %}
+    {% if f.description %}<p>{{ f.description }}</p>{% endif %}
+    {% if f.remediation %}<p><strong>Remediation:</strong> {{ f.remediation }}</p>{% endif %}
+  </div>
+  {% endfor %}
+{% endfor %}
+
+{% if rendered_modules|length == 0 %}
+<p class="meta"><em>No modules produced findings on this target. All modules executed
+  cleanly with zero positive results, or were skipped as not-applicable.</em></p>
+{% endif %}
+
+</body>
+</html>

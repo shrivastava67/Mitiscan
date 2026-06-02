@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+.env
+.idea/
+.vscode/
+mitiscan_outputs/mitiscan_outputs_*/
+*.log
+*.tmp
+wordlists/*.txt
+!wordlists/.gitkeep
