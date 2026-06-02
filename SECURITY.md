@@ -16,8 +16,8 @@ Report privately via one of:
 
 1. **GitHub Private Vulnerability Reporting** — preferred. Open
    <https://github.com/shrivastava67/Mitiscan/security/advisories/new>.
-2. **Email** — security@mitiscan.dev (replace with your contact). Encrypt
-   sensitive details with the maintainer's PGP key (publish at
+2. **Email** — mitigence+mitiscan.sec@gmail.com. Encrypt sensitive details
+   with the maintainer's PGP key (publish at
    `https://github.com/shrivastava67.gpg`).
 
 Include:

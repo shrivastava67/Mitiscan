@@ -41,9 +41,8 @@ when an individual is officially representing the community in public spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project team at **conduct@mitiscan.dev** (replace with your
-contact). All complaints will be reviewed and investigated promptly and
-fairly.
+reported to the project team at **mitigence+mitiscan.sec@gmail.com**.
+All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
 
